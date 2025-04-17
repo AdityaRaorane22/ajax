@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Form</title>
+</head>
+<body>
+    <h2>Registration Form</h2>
+    
+    <form id="registerForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required><br><br>
+        
+        <label for="college">College:</label>
+        <input type="text" id="college" oninput="autoSuggestCollege()">
+        <ul id="collegeSuggestions" style="list-style-type: none;"></ul><br><br>
+        
+        <label for="username">Username:</label>
+        <input type="text" id="username" required oninput="checkUsername()"><span id="usernameMessage"></span><br><br>
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" required><br><br>
+        
+        <label for="confirmPassword">Confirm Password:</label>
+        <input type="password" id="confirmPassword" required oninput="checkPassword()"><span id="passwordMessage"></span><br><br>
+        
+        <button type="submit" id="submitBtn">Register</button>
+    </form>
+    
+    <p id="successMessage"></p>
+
+    <script>
+        const existingUsernames = ['Aditya','Dinesh','Sairam','Ayush'];
+        const colleges = ['VESIT','IIT','MIT','COEP'];
+
+        // Username validation (check if already exists)
+        function checkUsername() {
+            const username = document.getElementById('username').value;
+            const messageElement = document.getElementById('usernameMessage');
+            if (existingUsernames.includes(username)) {
+                messageElement.textContent = ' Username already exists!';
+                messageElement.style.color = 'red';
+            } else {
+                messageElement.textContent = '';
+            }
+        }
+
+        // Password validation (check if passwords match)
+        function checkPassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const messageElement = document.getElementById('passwordMessage');
+            if (password !== confirmPassword) {
+                messageElement.textContent = ' Passwords do not match!';
+                messageElement.style.color = 'red';
+            } else {
+                messageElement.textContent = '';
+            }
+        }
+
+        // Auto-suggest colleges based on user input
+        function autoSuggestCollege() {
+            const collegeInput = document.getElementById('college').value.toLowerCase();
+            const suggestionsList = document.getElementById('collegeSuggestions');
+            suggestionsList.innerHTML = ''; // Clear existing suggestions
+
+            if (collegeInput.length > 0) {
+                // Filter college names based on the input
+                const filteredColleges = colleges.filter(college => college.toLowerCase().includes(collegeInput));
+
+                // Display suggestions
+                filteredColleges.forEach(college => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = college;
+                    listItem.onclick = function() {
+                        document.getElementById('college').value = college; // Set selected college
+                        suggestionsList.innerHTML = ''; // Clear suggestions after selection
+                    };
+                    suggestionsList.appendChild(listItem);
+                });
+            }
+        }
+
+        // Submit the form asynchronously using XMLHttpRequest
+        document.getElementById('registerForm').onsubmit = function(event) {
+            event.preventDefault(); // Prevents the default form submission
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const name = document.getElementById('name').value;
+            const college = document.getElementById('college').value;
+
+            if (existingUsernames.includes(username)) {
+                document.getElementById('usernameMessage').textContent = 'Username already exists!';
+                document.getElementById('usernameMessage').style.color = 'red';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById('passwordMessage').textContent = 'Passwords do not match!';
+                document.getElementById('passwordMessage').style.color = 'red';
+                return;
+            }
+
+            // Create a new XMLHttpRequest object to send the form data
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/register', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    document.getElementById('successMessage').textContent = response.message;
+                }
+            };
+
+            // Sending the data to the server
+            const data = {
+                name: name,
+                college: college,
+                username: username,
+                password: password
+            };
+            xhr.send(JSON.stringify(data));
+        };
+    </script>
+</body>
+</html>
